@@ -207,3 +207,7 @@
 (with-eval-after-load 'evil-matchit
   (define-key evil-normal-state-map (kbd "%") #'evilmi-jump-items)
   (define-key evil-visual-state-map (kbd "%") #'evilmi-jump-items))
+
+;
+;Relative number like nvim
+(setq display-line-numbers-type 'relative)
