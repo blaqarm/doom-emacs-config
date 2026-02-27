@@ -20,7 +20,6 @@
 ;;
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
-;;
 ;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
 ;;
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
@@ -208,6 +207,25 @@
   (define-key evil-normal-state-map (kbd "%") #'evilmi-jump-items)
   (define-key evil-visual-state-map (kbd "%") #'evilmi-jump-items))
 
-;
-;Relative number like nvim
+;;
+;;Relative number like nvim
 (setq display-line-numbers-type 'relative)
+;;
+(setq doom-font
+      (font-spec :family "Hack Nerd Font Mono"
+                 :weight 'regular))
+
+;;
+;; wl-copy for system buffer
+(setq wl-copy-process nil)
+
+(defun wl-copy (text)
+  (setq wl-copy-process (make-process
+                         :name "wl-copy"
+                         :buffer nil
+                         :command '("wl-copy" "-f" "-n")
+                         :connection-type 'pipe))
+  (process-send-string wl-copy-process text)
+  (process-send-eof wl-copy-process))
+
+(setq interprogram-cut-function 'wl-copy)
