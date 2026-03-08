@@ -1,1 +1,1 @@
-![doom-emacs-pic](images/doom-emacs-evil.png)
+![doom-emacs-pic](doom-emacs-evil.png)
