@@ -211,6 +211,8 @@
 ;;Relative number like nvim
 (setq display-line-numbers-type 'relative)
 ;;
+;; font
+;;
 (setq doom-font
       (font-spec :family "Hack Nerd Font Mono"
                  :weight 'regular))
@@ -229,3 +231,5 @@
   (process-send-eof wl-copy-process))
 
 (setq interprogram-cut-function 'wl-copy)
+
+
