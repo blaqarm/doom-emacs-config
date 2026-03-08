@@ -215,7 +215,10 @@
 ;;
 (setq doom-font
       (font-spec :family "Hack Nerd Font Mono"
-                 :weight 'regular))
+                 :size 14
+                 ;; :weight 'regular))
+                 :spacing 110
+                 :weight 'semibold))
 
 ;;
 ;; wl-copy for system buffer
@@ -232,4 +235,5 @@
 
 (setq interprogram-cut-function 'wl-copy)
 
-
+;; start image
+(setq fancy-splash-image "~/.doom.d/doom-emacs.png")
