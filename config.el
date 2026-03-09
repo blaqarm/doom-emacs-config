@@ -4,6 +4,35 @@
 ;; sync' after modifying this file!
 
 
+
+
+(setq evil-want-clipboard t)
+
+(setq select-enable-clipboard t
+      select-enable-primary nil)
+
+(defun my/wl-copy (text &optional _push)
+  (let ((process-connection-type nil))
+    (let ((proc (start-process
+                 "wl-copy" nil
+                 "wl-copy" "--type" "text/plain" "-f" "-n")))
+      (process-send-string proc text)
+      (process-send-eof proc))))
+
+(defun my/wl-paste ()
+  (string-trim-right
+   (shell-command-to-string
+    "wl-paste --no-newline --type text/plain 2>/dev/null | tr -d '\r'")))
+
+(defun my/force-plain-clipboard (&optional _frame)
+  (setq interprogram-cut-function #'my/wl-copy)
+  (setq interprogram-paste-function #'my/wl-paste))
+
+(add-hook 'after-init-hook #'my/force-plain-clipboard)
+(add-hook 'after-make-frame-functions #'my/force-plain-clipboard)
+
+
+
 ;; Some functionality uses this to identify you, e.g. GPG configuration, email
 ;; clients, file templates and snippets. It is optional.
 ;; (setq user-full-name "John Doe"
@@ -84,32 +113,39 @@
 (setq org-agenda-files
       (directory-files-recursively
        "/mnt/SSD1/blaQarm" "\\.org$"))
-;;
+
+
+
+
+
+
+;; system clipboard
+;; (setq evil-want-clipboard t)
 ;;
 ;; clipboard
-(setq select-enable-clipboard t
-      select-enable-primary t)
+;; (setq select-enable-clipboard t
+;;       select-enable-primary t)
 ;;
 ;; wayland clipboard for terminal emacs via wl-clipboard
-(when (and (not (display-graphic-p))
-           (eq system-type 'gnu/linux)
-           (or (getenv "WAYLAND_DISPLAY") (getenv "SWAYSOCK"))
-           (executable-find "wl-copy")
-           (executable-find "wl-paste"))
-  (defun my/wl-copy (text &optional _push)
-    (let ((process-connection-type nil))
-      (let ((proc (start-process "wl-copy" nil "wl-copy" "-f" "-n")))
-        (process-send-string proc text)
-        (process-send-eof proc))))
-  (defun my/wl-paste ()
-    (string-trim-right
-     (shell-command-to-string "wl-paste -n 2>/dev/null | tr -d '\r'")))
-  (setq interprogram-cut-function #'my/wl-copy)
-  (setq interprogram-paste-function #'my/wl-paste)
-  (setq select-enable-clipboard t))
+;; (when (and (not (display-graphic-p))
+;;            (eq system-type 'gnu/linux)
+;;            (or (getenv "WAYLAND_DISPLAY") (getenv "SWAYSOCK"))
+;;            (executable-find "wl-copy")
+;;            (executable-find "wl-paste"))
+;;   (defun my/wl-copy (text &optional _push)
+;;     (let ((process-connection-type nil))
+;;       (let ((proc (start-process "wl-copy" nil "wl-copy" "-f" "-n")))
+;;         (process-send-string proc text)
+;;         (process-send-eof proc))))
+;;   (defun my/wl-paste ()
+;;     (string-trim-right
+;;      (shell-command-to-string "wl-paste -n 2>/dev/null | tr -d '\r'")))
+;;   (setq interprogram-cut-function #'my/wl-copy)
+;;   (setq interprogram-paste-function #'my/wl-paste)
+;;   (setq select-enable-clipboard t))
 
 ;; Make evil yanks use system clipboard (+)
-(setq evil-unnamedplus t)
+;; (setq evil-unnamedplus t)
 ;;
 ;;
 ;;
