@@ -5,31 +5,56 @@
 
 
 
+;; clipboard 1
+;; (setq evil-want-clipboard t)
 
-(setq evil-want-clipboard t)
+;; (setq select-enable-clipboard t
+;;       select-enable-primary nil)
 
-(setq select-enable-clipboard t
-      select-enable-primary nil)
+;; (defun my/wl-copy (text &optional _push)
+;;   (let ((process-connection-type nil))
+;;     (let ((proc (start-process
+;;                  "wl-copy" nil
+;;                  "wl-copy" "--type" "text/plain" "-f" "-n")))
+;;       (process-send-string proc text)
+;;       (process-send-eof proc))))
 
+;; (defun my/wl-paste ()
+;;   (string-trim-right
+;;    (shell-command-to-string
+;;     "wl-paste --no-newline --type text/plain 2>/dev/null | tr -d '\r'")))
+
+;; (defun my/force-plain-clipboard (&optional _frame)
+;;   (setq interprogram-cut-function #'my/wl-copy)
+;;   (setq interprogram-paste-function #'my/wl-paste))
+
+;; (add-hook 'after-init-hook #'my/force-plain-clipboard)
+;; (add-hook 'after-make-frame-functions #'my/force-plain-clipboard)
+
+
+
+
+
+
+;; clipboard 2
 (defun my/wl-copy (text &optional _push)
-  (let ((process-connection-type nil))
-    (let ((proc (start-process
-                 "wl-copy" nil
-                 "wl-copy" "--type" "text/plain" "-f" "-n")))
+  (with-temp-file "/tmp/emacs-wl-copy-debug.txt"
+    (insert "RAW:\n")
+    (prin1 text (current-buffer))
+    (insert "\n\nPLAIN:\n")
+    (insert text))
+  (let ((process-connection-type nil)
+        (coding-system-for-write 'utf-8))
+    (let ((proc (make-process
+                 :name "wl-copy"
+                 :buffer nil
+                 :command '("wl-copy" "--type" "text/plain;charset=utf-8" "-f" "-n")
+                 :connection-type 'pipe
+                 :noquery t)))
       (process-send-string proc text)
       (process-send-eof proc))))
 
-(defun my/wl-paste ()
-  (string-trim-right
-   (shell-command-to-string
-    "wl-paste --no-newline --type text/plain 2>/dev/null | tr -d '\r'")))
 
-(defun my/force-plain-clipboard (&optional _frame)
-  (setq interprogram-cut-function #'my/wl-copy)
-  (setq interprogram-paste-function #'my/wl-paste))
-
-(add-hook 'after-init-hook #'my/force-plain-clipboard)
-(add-hook 'after-make-frame-functions #'my/force-plain-clipboard)
 
 
 
@@ -273,3 +298,66 @@
 
 ;; start image
 (setq fancy-splash-image "~/.doom.d/doom-emacs.png")
+
+
+
+
+
+
+
+
+
+
+
+
+;; gptel
+(after! gptel
+  (setq gptel-backend
+        (gptel-make-ollama "Ollama"
+          :host "127.0.0.1:11434"
+          :models '("qwen3:14b")
+          :stream t))
+  (setq gptel-model "qwen3:14b"))
+
+(after! gptel
+  (setq gptel-system-message
+        "Ты опытный преподаватель программирования.
+Отвечай ТОЛЬКО на русском языке.
+Объясняй шаг за шагом.
+Не давай сразу готовое решение, сначала подсказки.
+После объяснения давай небольшое упражнение."))
+
+;; (map! :leader
+;;       (:prefix ("l" . "llm")
+;;        :desc "AI chat" "c" #'gptel
+;;        :desc "Ask about region" "r" #'gptel-send
+;;        :desc "Ask about buffer" "b" #'gptel-send-buffer
+;;        :desc "Set system prompt" "s" #'gptel-set-system-message))
+
+(after! gptel
+  (setq gptel-backend
+        (gptel-make-ollama "Ollama"
+          :host "127.0.0.1:11434"
+          :models '("qwen3:14b")
+          :stream t))
+  (setq gptel-model "qwen3:14b")
+  (setq gptel-system-message
+        "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
+
+(defun my/gptel-send-region ()
+  "Отправить выделенный регион в gptel."
+  (interactive)
+  (if (use-region-p)
+      (gptel-send (region-beginning) (region-end))
+    (user-error "Сначала выдели регион")))
+
+(defun my/gptel-send-buffer ()
+  "Отправить весь буфер в gptel."
+  (interactive)
+  (gptel-send (point-min) (point-max)))
+
+(map! :leader
+      (:prefix ("l" . "llm")
+       :desc "AI chat" "c" #'gptel
+       :desc "Ask about region" "r" #'my/gptel-send-region
+       :desc "Ask about buffer" "b" #'my/gptel-send-buffer))

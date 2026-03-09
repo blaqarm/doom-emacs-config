@@ -54,5 +54,10 @@
 ;; (unpin! t)
 
 
-
+;; evil
 (package! evil-matchit)
+
+
+
+;; gptel
+(package! gptel)
