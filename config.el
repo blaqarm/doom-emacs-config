@@ -310,22 +310,22 @@
 
 
 
-;; gptel
-(after! gptel
-  (setq gptel-backend
-        (gptel-make-ollama "Ollama"
-          :host "127.0.0.1:11434"
-          :models '("qwen3:14b")
-          :stream t))
-  (setq gptel-model "qwen3:14b"))
+;; ;; gptel
+;; (after! gptel
+;;   (setq gptel-backend
+;;         (gptel-make-ollama "Ollama"
+;;           :host "127.0.0.1:11434"
+;;           :models '("qwen3:14b")
+;;           :stream t))
+;;   (setq gptel-model "qwen3:14b"))
 
-(after! gptel
-  (setq gptel-system-message
-        "Ты опытный преподаватель программирования.
-Отвечай ТОЛЬКО на русском языке.
-Объясняй шаг за шагом.
-Не давай сразу готовое решение, сначала подсказки.
-После объяснения давай небольшое упражнение."))
+;; (after! gptel
+;;   (setq gptel-system-message
+;;         "Ты опытный преподаватель программирования.
+;; Отвечай ТОЛЬКО на русском языке.
+;; Объясняй шаг за шагом.
+;; Не давай сразу готовое решение, сначала подсказки.
+;; После объяснения давай небольшое упражнение."))
 
 ;; (map! :leader
 ;;       (:prefix ("l" . "llm")
@@ -334,30 +334,113 @@
 ;;        :desc "Ask about buffer" "b" #'gptel-send-buffer
 ;;        :desc "Set system prompt" "s" #'gptel-set-system-message))
 
+;; (after! gptel
+;;   (setq gptel-backend
+;;         (gptel-make-ollama "Ollama"
+;;           :host "127.0.0.1:11434"
+;;           :models '("qwen3:14b")
+;;           :stream t))
+;;   (setq gptel-model "qwen3:14b")
+;;   (setq gptel-system-message
+;;         "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
+
+;; (defun my/gptel-send-region ()
+;;   "Отправить выделенный регион в gptel."
+;;   (interactive)
+;;   (if (use-region-p)
+;;       (gptel-send (region-beginning) (region-end))
+;;     (user-error "Сначала выдели регион")))
+
+;; (defun my/gptel-send-buffer ()
+;;   "Отправить весь буфер в gptel."
+;;   (interactive)
+;;   (gptel-send (point-min) (point-max)))
+
+;; (map! :leader
+;;       (:prefix ("l" . "llm")
+;;        :desc "AI chat" "c" #'gptel
+;;        :desc "Ask about region" "r" #'my/gptel-send-region
+;;        :desc "Ask about buffer" "b" #'my/gptel-send-buffer))
+
+
+
+
+
+
+
+
 (after! gptel
   (setq gptel-backend
-        (gptel-make-ollama "Ollama"
-          :host "127.0.0.1:11434"
-          :models '("qwen3:14b")
-          :stream t))
-  (setq gptel-model "qwen3:14b")
+        (gptel-make-ollama
+         "Ollama"
+         :host "127.0.0.1:11434"
+         :models '(qwen3:14b)
+         :stream t))
+
+  (setq gptel-model 'qwen3:14b)
+
   (setq gptel-system-message
         "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
 
-(defun my/gptel-send-region ()
-  "Отправить выделенный регион в gptel."
+(defun my/gptel-open-chat ()
+  "Открыть чат gptel."
   (interactive)
-  (if (use-region-p)
-      (gptel-send (region-beginning) (region-end))
-    (user-error "Сначала выдели регион")))
+  (gptel "*gptel*"))
 
-(defun my/gptel-send-buffer ()
-  "Отправить весь буфер в gptel."
+(defun my/gptel-ask-region ()
+  "Отправить выделенный регион в чат gptel."
   (interactive)
-  (gptel-send (point-min) (point-max)))
+  (unless (use-region-p)
+    (user-error "Сначала выдели код"))
+  (let ((text (buffer-substring-no-properties
+               (region-beginning)
+               (region-end)))
+        (src-buf (current-buffer))
+        (src-file (or (buffer-file-name) (buffer-name)))
+        (src-mode (symbol-name major-mode)))
+    (with-current-buffer (gptel "*gptel*")
+      (goto-char (point-max))
+      (unless (bolp)
+        (insert "\n\n"))
+      (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
+      (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Отвечай по-русски.\n\n")
+      (insert "```" src-mode "\n")
+      (insert text)
+      (insert "\n```\n\n")
+      (gptel-send))
+    (pop-to-buffer "*gptel*")))
+
+(defun my/gptel-ask-buffer ()
+  "Отправить весь текущий буфер в чат gptel."
+  (interactive)
+  (let ((text (buffer-substring-no-properties (point-min) (point-max)))
+        (src-file (or (buffer-file-name) (buffer-name)))
+        (src-mode (symbol-name major-mode)))
+    (with-current-buffer (gptel "*gptel*")
+      (goto-char (point-max))
+      (unless (bolp)
+        (insert "\n\n"))
+      (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
+      (insert "Проанализируй этот файл. Объясни по-русски, что он делает, и укажи возможные проблемы.\n\n")
+      (insert "```" src-mode "\n")
+      (insert text)
+      (insert "\n```\n\n")
+      (gptel-send))
+    (pop-to-buffer "*gptel*")))
 
 (map! :leader
       (:prefix ("l" . "llm")
-       :desc "AI chat" "c" #'gptel
-       :desc "Ask about region" "r" #'my/gptel-send-region
-       :desc "Ask about buffer" "b" #'my/gptel-send-buffer))
+       :desc "Open AI chat" "c" #'my/gptel-open-chat
+       :desc "Ask about region" "r" #'my/gptel-ask-region
+       :desc "Ask about buffer" "b" #'my/gptel-ask-buffer))
+
+
+
+
+
+
+
+;; next buffer
+(map!
+ :n "C-<tab>" #'next-buffer
+ :n "C-S-<tab>" #'previous-buffer)

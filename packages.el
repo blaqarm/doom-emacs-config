@@ -61,3 +61,4 @@
 
 ;; gptel
 (package! gptel)
+
