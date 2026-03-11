@@ -368,7 +368,81 @@
 
 
 
+;; second
+;; (after! gptel
+;;   (setq gptel-backend
+;;         (gptel-make-ollama
+;;          "Ollama"
+;;          :host "127.0.0.1:11434"
+;;          :models '(qwen3:14b)
+;;          :stream t))
 
+;;   (setq gptel-model 'qwen3:14b)
+
+;;   (setq gptel-system-message
+;;         "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
+
+;; (defun my/gptel-open-chat ()
+;;   "Открыть чат gptel."
+;;   (interactive)
+;;   (gptel "*gptel*"))
+
+;; (defun my/gptel-ask-region ()
+;;   "Отправить выделенный регион в чат gptel."
+;;   (interactive)
+;;   (unless (use-region-p)
+;;     (user-error "Сначала выдели код"))
+;;   (let ((text (buffer-substring-no-properties
+;;                (region-beginning)
+;;                (region-end)))
+;;         (src-buf (current-buffer))
+;;         (src-file (or (buffer-file-name) (buffer-name)))
+;;         (src-mode (symbol-name major-mode)))
+;;     (with-current-buffer (gptel "*gptel*")
+;;       (goto-char (point-max))
+;;       (unless (bolp)
+;;         (insert "\n\n"))
+;;       (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
+;;       (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Отвечай по-русски.\n\n")
+;;       (insert "```" src-mode "\n")
+;;       (insert text)
+;;       (insert "\n```\n\n")
+;;       (gptel-send))
+;;     (pop-to-buffer "*gptel*")))
+
+;; (defun my/gptel-ask-buffer ()
+;;   "Отправить весь текущий буфер в чат gptel."
+;;   (interactive)
+;;   (let ((text (buffer-substring-no-properties (point-min) (point-max)))
+;;         (src-file (or (buffer-file-name) (buffer-name)))
+;;         (src-mode (symbol-name major-mode)))
+;;     (with-current-buffer (gptel "*gptel*")
+;;       (goto-char (point-max))
+;;       (unless (bolp)
+;;         (insert "\n\n"))
+;;       (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
+;;       (insert "Проанализируй этот файл. Объясни по-русски, что он делает, и укажи возможные проблемы.\n\n")
+;;       (insert "```" src-mode "\n")
+;;       (insert text)
+;;       (insert "\n```\n\n")
+;;       (gptel-send))
+;;     (pop-to-buffer "*gptel*")))
+
+;; (map! :leader
+;;       (:prefix ("l" . "llm")
+;;        :desc "Open AI chat" "c" #'my/gptel-open-chat
+;;        :desc "Ask about region" "r" #'my/gptel-ask-region
+;;        :desc "Ask about buffer" "b" #'my/gptel-ask-buffer))
+
+
+
+
+
+
+
+
+
+;; gptel org mode style
 (after! gptel
   (setq gptel-backend
         (gptel-make-ollama
@@ -380,12 +454,27 @@
   (setq gptel-model 'qwen3:14b)
 
   (setq gptel-system-message
-        "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
+        (concat
+         "Отвечай только на русском языке. "
+         "Код и технические термины оставляй на английском. "
+         "Ты терпеливый репетитор по программированию. "
+         "Форматируй ответы в синтаксисе org-mode. "
+         "Используй:\n"
+         "- заголовки в стиле * Заголовок\n"
+         "- списки через -\n"
+         "- для кода используй блоки вида #+begin_src <language> и #+end_src\n"
+         "- не используй markdown fences ```\n"
+         "- если объясняешь код, делай структуру: * Что делает код, * Возможные проблемы, * Как улучшить, * Маленькое упражнение"))
+
+  (add-hook 'gptel-mode-hook #'org-mode))
 
 (defun my/gptel-open-chat ()
-  "Открыть чат gptel."
+  "Открыть чат gptel в org-mode."
   (interactive)
-  (gptel "*gptel*"))
+  (let ((buf (gptel "*gptel*")))
+    (with-current-buffer buf
+      (org-mode))
+    (pop-to-buffer buf)))
 
 (defun my/gptel-ask-region ()
   "Отправить выделенный регион в чат gptel."
@@ -395,20 +484,22 @@
   (let ((text (buffer-substring-no-properties
                (region-beginning)
                (region-end)))
-        (src-buf (current-buffer))
         (src-file (or (buffer-file-name) (buffer-name)))
         (src-mode (symbol-name major-mode)))
-    (with-current-buffer (gptel "*gptel*")
-      (goto-char (point-max))
-      (unless (bolp)
-        (insert "\n\n"))
-      (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
-      (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Отвечай по-русски.\n\n")
-      (insert "```" src-mode "\n")
-      (insert text)
-      (insert "\n```\n\n")
-      (gptel-send))
-    (pop-to-buffer "*gptel*")))
+    (let ((buf (gptel "*gptel*")))
+      (with-current-buffer buf
+        (org-mode)
+        (goto-char (point-max))
+        (unless (bolp)
+          (insert "\n\n"))
+        (insert (format "* Контекст\nФайл: %s\nРежим: %s\n\n" src-file src-mode))
+        (insert "* Запрос\n")
+        (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Ответь в org-синтаксисе.\n\n")
+        (insert (format "#+begin_src %s\n" src-mode))
+        (insert text)
+        (insert "\n#+end_src\n\n")
+        (gptel-send))
+      (pop-to-buffer buf))))
 
 (defun my/gptel-ask-buffer ()
   "Отправить весь текущий буфер в чат gptel."
@@ -416,23 +507,31 @@
   (let ((text (buffer-substring-no-properties (point-min) (point-max)))
         (src-file (or (buffer-file-name) (buffer-name)))
         (src-mode (symbol-name major-mode)))
-    (with-current-buffer (gptel "*gptel*")
-      (goto-char (point-max))
-      (unless (bolp)
-        (insert "\n\n"))
-      (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
-      (insert "Проанализируй этот файл. Объясни по-русски, что он делает, и укажи возможные проблемы.\n\n")
-      (insert "```" src-mode "\n")
-      (insert text)
-      (insert "\n```\n\n")
-      (gptel-send))
-    (pop-to-buffer "*gptel*")))
+    (let ((buf (gptel "*gptel*")))
+      (with-current-buffer buf
+        (org-mode)
+        (goto-char (point-max))
+        (unless (bolp)
+          (insert "\n\n"))
+        (insert (format "* Контекст\nФайл: %s\nРежим: %s\n\n" src-file src-mode))
+        (insert "* Запрос\n")
+        (insert "Проанализируй этот файл. Объясни по-русски, что он делает, укажи возможные проблемы и ответь в org-синтаксисе.\n\n")
+        (insert (format "#+begin_src %s\n" src-mode))
+        (insert text)
+        (insert "\n#+end_src\n\n")
+        (gptel-send))
+      (pop-to-buffer buf))))
 
 (map! :leader
       (:prefix ("l" . "llm")
        :desc "Open AI chat" "c" #'my/gptel-open-chat
        :desc "Ask about region" "r" #'my/gptel-ask-region
        :desc "Ask about buffer" "b" #'my/gptel-ask-buffer))
+
+
+
+
+
 
 
 
