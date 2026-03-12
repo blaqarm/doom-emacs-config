@@ -305,229 +305,153 @@
 
 
 
+;; gptel + Ollama for Doom Emacs
+;; Normal chat: qwen3:14b
+;; Fast/code chat: qwen2.5-coder:7b
 
-
-
-
-
-;; ;; gptel
-;; (after! gptel
-;;   (setq gptel-backend
-;;         (gptel-make-ollama "Ollama"
-;;           :host "127.0.0.1:11434"
-;;           :models '("qwen3:14b")
-;;           :stream t))
-;;   (setq gptel-model "qwen3:14b"))
-
-;; (after! gptel
-;;   (setq gptel-system-message
-;;         "Ты опытный преподаватель программирования.
-;; Отвечай ТОЛЬКО на русском языке.
-;; Объясняй шаг за шагом.
-;; Не давай сразу готовое решение, сначала подсказки.
-;; После объяснения давай небольшое упражнение."))
-
-;; (map! :leader
-;;       (:prefix ("l" . "llm")
-;;        :desc "AI chat" "c" #'gptel
-;;        :desc "Ask about region" "r" #'gptel-send
-;;        :desc "Ask about buffer" "b" #'gptel-send-buffer
-;;        :desc "Set system prompt" "s" #'gptel-set-system-message))
-
-;; (after! gptel
-;;   (setq gptel-backend
-;;         (gptel-make-ollama "Ollama"
-;;           :host "127.0.0.1:11434"
-;;           :models '("qwen3:14b")
-;;           :stream t))
-;;   (setq gptel-model "qwen3:14b")
-;;   (setq gptel-system-message
-;;         "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
-
-;; (defun my/gptel-send-region ()
-;;   "Отправить выделенный регион в gptel."
-;;   (interactive)
-;;   (if (use-region-p)
-;;       (gptel-send (region-beginning) (region-end))
-;;     (user-error "Сначала выдели регион")))
-
-;; (defun my/gptel-send-buffer ()
-;;   "Отправить весь буфер в gptel."
-;;   (interactive)
-;;   (gptel-send (point-min) (point-max)))
-
-;; (map! :leader
-;;       (:prefix ("l" . "llm")
-;;        :desc "AI chat" "c" #'gptel
-;;        :desc "Ask about region" "r" #'my/gptel-send-region
-;;        :desc "Ask about buffer" "b" #'my/gptel-send-buffer))
-
-
-
-
-
-
-
-;; second
-;; (after! gptel
-;;   (setq gptel-backend
-;;         (gptel-make-ollama
-;;          "Ollama"
-;;          :host "127.0.0.1:11434"
-;;          :models '(qwen3:14b)
-;;          :stream t))
-
-;;   (setq gptel-model 'qwen3:14b)
-
-;;   (setq gptel-system-message
-;;         "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты терпеливый репетитор по программированию."))
-
-;; (defun my/gptel-open-chat ()
-;;   "Открыть чат gptel."
-;;   (interactive)
-;;   (gptel "*gptel*"))
-
-;; (defun my/gptel-ask-region ()
-;;   "Отправить выделенный регион в чат gptel."
-;;   (interactive)
-;;   (unless (use-region-p)
-;;     (user-error "Сначала выдели код"))
-;;   (let ((text (buffer-substring-no-properties
-;;                (region-beginning)
-;;                (region-end)))
-;;         (src-buf (current-buffer))
-;;         (src-file (or (buffer-file-name) (buffer-name)))
-;;         (src-mode (symbol-name major-mode)))
-;;     (with-current-buffer (gptel "*gptel*")
-;;       (goto-char (point-max))
-;;       (unless (bolp)
-;;         (insert "\n\n"))
-;;       (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
-;;       (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Отвечай по-русски.\n\n")
-;;       (insert "```" src-mode "\n")
-;;       (insert text)
-;;       (insert "\n```\n\n")
-;;       (gptel-send))
-;;     (pop-to-buffer "*gptel*")))
-
-;; (defun my/gptel-ask-buffer ()
-;;   "Отправить весь текущий буфер в чат gptel."
-;;   (interactive)
-;;   (let ((text (buffer-substring-no-properties (point-min) (point-max)))
-;;         (src-file (or (buffer-file-name) (buffer-name)))
-;;         (src-mode (symbol-name major-mode)))
-;;     (with-current-buffer (gptel "*gptel*")
-;;       (goto-char (point-max))
-;;       (unless (bolp)
-;;         (insert "\n\n"))
-;;       (insert (format "Контекст: файл %s, режим %s.\n\n" src-file src-mode))
-;;       (insert "Проанализируй этот файл. Объясни по-русски, что он делает, и укажи возможные проблемы.\n\n")
-;;       (insert "```" src-mode "\n")
-;;       (insert text)
-;;       (insert "\n```\n\n")
-;;       (gptel-send))
-;;     (pop-to-buffer "*gptel*")))
-
-;; (map! :leader
-;;       (:prefix ("l" . "llm")
-;;        :desc "Open AI chat" "c" #'my/gptel-open-chat
-;;        :desc "Ask about region" "r" #'my/gptel-ask-region
-;;        :desc "Ask about buffer" "b" #'my/gptel-ask-buffer))
-
-
-
-
-
-
-
-
-
-;; gptel org mode style
 (after! gptel
   (setq gptel-backend
         (gptel-make-ollama
          "Ollama"
          :host "127.0.0.1:11434"
-         :models '(qwen3:14b)
-         :stream t))
+         :stream t
+         :models '(qwen3:14b qwen2.5-coder:7b)))
 
+;; модель по умолчанию
   (setq gptel-model 'qwen3:14b)
 
   (setq gptel-system-message
-        (concat
-         "Отвечай только на русском языке. "
-         "Код и технические термины оставляй на английском. "
-         "Ты терпеливый репетитор по программированию. "
-         "Форматируй ответы в синтаксисе org-mode. "
-         "Используй:\n"
-         "- заголовки в стиле * Заголовок\n"
-         "- списки через -\n"
-         "- для кода используй блоки вида #+begin_src <language> и #+end_src\n"
-         "- не используй markdown fences ```\n"
-         "- если объясняешь код, делай структуру: * Что делает код, * Возможные проблемы, * Как улучшить, * Маленькое упражнение"))
+        "Отвечай на русском языке. Код и технические термины оставляй на английском. Ты помощник по программированию."))
 
-  (add-hook 'gptel-mode-hook #'org-mode))
+;; буфер с нужной моделью
+
+(defun my/gptel-get-buffer (name model)
+  (let ((buf (gptel name)))
+    (with-current-buffer buf
+      (setq-local gptel-model model))
+    buf))
+
+;; обычный чат
 
 (defun my/gptel-open-chat ()
-  "Открыть чат gptel в org-mode."
   (interactive)
-  (let ((buf (gptel "*gptel*")))
+  (pop-to-buffer
+   (my/gptel-get-buffer "*gptel*" 'qwen3:14b)))
+
+;; быстрый чат
+
+(defun my/gptel-open-fast-chat ()
+  (interactive)
+  (pop-to-buffer
+   (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+
+;; быстрый вопрос
+
+(defun my/gptel-fast-question (question)
+  (interactive "sБыстрый вопрос: ")
+
+  (let ((buf (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+
     (with-current-buffer buf
-      (org-mode))
+      (goto-char (point-max))
+
+      (unless (bolp)
+        (insert "\n\n"))
+
+      (insert question)
+      (insert "\n\n")
+
+      (gptel-send))
+
     (pop-to-buffer buf)))
 
+;; спросить про выделение
+
 (defun my/gptel-ask-region ()
-  "Отправить выделенный регион в чат gptel."
   (interactive)
+
   (unless (use-region-p)
     (user-error "Сначала выдели код"))
-  (let ((text (buffer-substring-no-properties
-               (region-beginning)
-               (region-end)))
-        (src-file (or (buffer-file-name) (buffer-name)))
-        (src-mode (symbol-name major-mode)))
-    (let ((buf (gptel "*gptel*")))
-      (with-current-buffer buf
-        (org-mode)
-        (goto-char (point-max))
-        (unless (bolp)
-          (insert "\n\n"))
-        (insert (format "* Контекст\nФайл: %s\nРежим: %s\n\n" src-file src-mode))
-        (insert "* Запрос\n")
-        (insert "Объясни, что делает этот код. Если видишь проблему или баг — укажи. Ответь в org-синтаксисе.\n\n")
-        (insert (format "#+begin_src %s\n" src-mode))
-        (insert text)
-        (insert "\n#+end_src\n\n")
-        (gptel-send))
-      (pop-to-buffer buf))))
+
+  (let* ((text (buffer-substring-no-properties
+                (region-beginning)
+                (region-end)))
+
+         (src-file (or (buffer-file-name) (buffer-name)))
+         (src-mode (symbol-name major-mode))
+
+         ;; (buf (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+            (buf (my/gptel-get-buffer "*gptel*" 'qwen3:14b)))
+
+    (with-current-buffer buf
+      (goto-char (point-max))
+
+      (unless (bolp)
+        (insert "\n\n"))
+
+      (insert
+       (format
+        "Объясни этот код. Укажи возможные проблемы и предложи улучшения.\n\nФайл: %s\nРежим: %s\n\n"
+        src-file src-mode))
+
+      (insert text)
+      (insert "\n\n")
+
+      (gptel-send))
+
+    (pop-to-buffer buf)))
+
+;; весь буфффер
 
 (defun my/gptel-ask-buffer ()
-  "Отправить весь текущий буфер в чат gptel."
   (interactive)
-  (let ((text (buffer-substring-no-properties (point-min) (point-max)))
-        (src-file (or (buffer-file-name) (buffer-name)))
-        (src-mode (symbol-name major-mode)))
-    (let ((buf (gptel "*gptel*")))
-      (with-current-buffer buf
-        (org-mode)
-        (goto-char (point-max))
-        (unless (bolp)
-          (insert "\n\n"))
-        (insert (format "* Контекст\nФайл: %s\nРежим: %s\n\n" src-file src-mode))
-        (insert "* Запрос\n")
-        (insert "Проанализируй этот файл. Объясни по-русски, что он делает, укажи возможные проблемы и ответь в org-синтаксисе.\n\n")
-        (insert (format "#+begin_src %s\n" src-mode))
-        (insert text)
-        (insert "\n#+end_src\n\n")
-        (gptel-send))
-      (pop-to-buffer buf))))
+
+  (let* ((text (buffer-substring-no-properties
+                (point-min)
+                (point-max)))
+
+         (src-file (or (buffer-file-name) (buffer-name)))
+         (src-mode (symbol-name major-mode))
+
+         (buf (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+
+    (with-current-buffer buf
+      (goto-char (point-max))
+
+      (unless (bolp)
+        (insert "\n\n"))
+
+      (insert
+       (format
+        "Проанализируй этот файл. Объясни что он делает и предложи улучшения.\n\nФайл: %s\nРежим: %s\n\n"
+        src-file src-mode))
+
+      (insert text)
+      (insert "\n\n")
+
+      (gptel-send))
+
+    (pop-to-buffer buf)))
+
+;; Doom keybindings
 
 (map! :leader
       (:prefix ("l" . "llm")
-       :desc "Open AI chat" "c" #'my/gptel-open-chat
-       :desc "Ask about region" "r" #'my/gptel-ask-region
-       :desc "Ask about buffer" "b" #'my/gptel-ask-buffer))
 
+       :desc "Chat (qwen3)"
+       "c" #'my/gptel-open-chat
+
+       :desc "Fast chat (coder)"
+       "f" #'my/gptel-open-fast-chat
+
+       :desc "Fast question"
+       "q" #'my/gptel-fast-question
+
+       :desc "Ask about region"
+       "r" #'my/gptel-ask-region
+
+       :desc "Ask about buffer"
+       "b" #'my/gptel-ask-buffer))
 
 
 
