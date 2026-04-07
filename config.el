@@ -135,13 +135,19 @@
 ;; for agenda
 ;;(setq org-agenda-files '("/mnt/SSD1/blaQarm"))
 ;;
+;; (setq org-agenda-files
+;;       (directory-files-recursively
+;;        "/mnt/SSD1/blaQarm" "\\.org$"))
+
+
 (setq org-agenda-files
       (directory-files-recursively
-       "/mnt/SSD1/blaQarm" "\\.org$"))
-
-
-
-
+       "/mnt/SSD1/blaQarm"
+       "\\.org$"
+       nil
+       (lambda (dir)
+         (not (string-match-p "Programming" dir)))))
+;; (not (string-match-p "Programming\\|Archive\\|Temp" dir)))
 
 
 ;; system clipboard
@@ -413,7 +419,8 @@
          (src-file (or (buffer-file-name) (buffer-name)))
          (src-mode (symbol-name major-mode))
 
-         (buf (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+         ;; (buf (my/gptel-get-buffer "*gptel-fast*" 'qwen2.5-coder:7b)))
+         (buf (my/gptel-get-buffer "*gptel-fast*" 'qwen3:14b)))
 
     (with-current-buffer buf
       (goto-char (point-max))
